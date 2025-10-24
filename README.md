@@ -1,11 +1,11 @@
-**Spaced Repetition** :
+**Spaced Repetition** :⚠️ Deprecated Functions
 
 https://docs.google.com/spreadsheets/d/1GB3jVM6CfXrSfLkw4OimqYb0ai8_HzUHsiBrqhDyGKk/edit?usp=sharing
 
 
-** Deep Work **
+**Deep Work** : کار میکنه
 
-
+https://docs.google.com/spreadsheets/d/1FzQzqaSl-EFVPkU83eANj99V_XgHMY5BmEdAS3aD__s/edit?usp=sharing
 ## 🎯 **ویژگی‌های نسخه حرفه‌ای:**
 
 ### ✨ **افزونه‌های جدید:**

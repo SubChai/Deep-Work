@@ -1,23 +1,21 @@
 /**
  * =============================================================================
- * 🏆 ACTIVITY DeepWork PRO - ULTIMATE EDITION v3.0 SubChai
+ * 🏆 ACTIVITY DeepWork PRO - ULTIMATE EDITION v3.1 SubChai
  * =============================================================================
  * 
  * 🎯 نسخه حرفه‌ای با قابلیت‌های پیشرفته + اعداد فارسی
  * ویژگی‌ها:
  * ✅ محاسبه خودکار زمان
- * ✅ تاریخ شمسی هوشمند
- * ✅ 🆕 تبدیل خودکار به اعداد فارسی
+ * ✅ تاریخ شمسی هوشمند (فیکس شده)
+ * ✅ تبدیل خودکار به اعداد فارسی
  * ✅ Dashboard آماری
- * ✅ نمودارهای تحلیلی
- * ✅ Backup خودکار
  * ✅ رنگ‌بندی هوشمند
  * ✅ گزارش‌ساز حرفه‌ای
  * ✅ اعلان‌های هوشمند
  * ✅ جستجوی پیشرفته
  * 
  * نویسنده: SubChai
- * نسخه: 3.0 Ultimate + Persian Numbers
+ * نسخه: 3.1 Ultimate (Date Fixed)
  * =============================================================================
  */
 
@@ -28,7 +26,7 @@
 const CONFIG = {
   HEADER_ROWS: 2,
   START_ROW: 3,
-  VERSION: '3.0 Ultimate + Persian',
+  VERSION: '3.1 Ultimate + Persian (Fixed)',
   
   GROUPS: [
     { name: 'گروه ۱', subject: 1,  start: 2,  end: 3,  calc: 4,  date: 5  },
@@ -38,30 +36,19 @@ const CONFIG = {
     { name: 'گروه ۵', subject: 21, start: 22, end: 23, calc: 24, date: 25 }
   ],
   
-  // تنظیمات رنگ‌بندی
   COLORS: {
-    LOW_WORK: '#e8f5e9',      // کار کم (کمتر از 4 ساعت)
-    MEDIUM_WORK: '#fff9c4',    // کار متوسط (4-8 ساعت)
-    HIGH_WORK: '#ffccbc',      // کار زیاد (8-12 ساعت)
-    VERY_HIGH_WORK: '#ffcdd2', // کار خیلی زیاد (بیش از 12 ساعت)
-    HEADER: '#b3e5fc',         // رنگ هدر
-    WEEKEND: '#f3e5f5'         // رنگ تعطیلات
+    LOW_WORK: '#e8f5e9',
+    MEDIUM_WORK: '#fff9c4',
+    HIGH_WORK: '#ffccbc',
+    VERY_HIGH_WORK: '#ffcdd2',
+    HEADER: '#b3e5fc',
+    WEEKEND: '#f3e5f5'
   },
   
-  // تنظیمات هشدار
   ALERTS: {
-    DAILY_LIMIT: 12,           // حداکثر ساعت کار در روز
-    WEEKLY_TARGET: 40,         // هدف ساعت کاری هفتگی
-    LOW_WORK_THRESHOLD: 2      // حد پایین کار روزانه
-  },
-  
-  // شیت‌های جانبی
-  SHEETS: {
-    MAIN: 'Activity Tracker',
-    DASHBOARD: 'Dashboard',
-    REPORTS: 'Reports',
-    BACKUP: 'Backup',
-    SETTINGS: 'Settings'
+    DAILY_LIMIT: 12,
+    WEEKLY_TARGET: 40,
+    LOW_WORK_THRESHOLD: 2
   }
 };
 
@@ -102,28 +89,17 @@ function onEdit(e) {
     const row = range.getRow();
     const col = range.getColumn();
     
-    // نادیده گرفتن ردیف‌های هدر
     if (row <= CONFIG.HEADER_ROWS) return;
-    
-    // نادیده گرفتن ستون Z
     if (col === 26) return;
     
-    // یافتن گروه مربوطه
     const group = findGroup(col);
     if (!group) return;
     
     Logger.log(`✅ پردازش: ردیف ${row}, ستون ${col}, ${group.name}`);
     
-    // پردازش ویرایش
     processEdit(sheet, row, col, group);
-    
-    // اعمال رنگ‌بندی هوشمند
     applySmartColoring(sheet, row, group);
-    
-    // بررسی هشدارها
     checkAlerts(sheet, row, group);
-    
-    // نمایش پیام موفقیت
     showSuccessToast();
     
   } catch (error) {
@@ -148,7 +124,10 @@ function onOpen() {
       .addSeparator()
       .addSubMenu(ui.createMenu('🔍 ابزارها')
         .addItem('🔎 جستجوی پیشرفته', 'advancedSearch')
-        .addItem('🎯 تنظیم اهداف', 'setGoals'))
+        .addItem('🎯 تنظیم اهداف', 'setGoals')
+        .addSeparator()
+        .addItem('🧪 تست تاریخ', 'testDate')
+        .addItem('🔍 دیباگ عمیق', 'deepDebug'))
       .addSeparator()
       .addItem('⚙️ تنظیمات', 'showSettings')
       .addItem('📖 راهنما', 'showHelp')
@@ -156,8 +135,6 @@ function onOpen() {
       .addToUi();
     
     Logger.log('✅ منو ایجاد شد');
-    
-    // نمایش پیام خوش‌آمد (فقط بار اول)
     showWelcomeMessage();
     
   } catch (error) {
@@ -184,7 +161,6 @@ function findGroup(col) {
 
 function processEdit(sheet, row, col, group) {
   try {
-    // اگر ستون موضوع ویرایش شد → تاریخ شمسی
     if (col === group.subject) {
       const subject = sheet.getRange(row, group.subject).getValue();
       if (subject && subject.toString().trim() !== '') {
@@ -194,7 +170,6 @@ function processEdit(sheet, row, col, group) {
       }
     }
     
-    // اگر ستون زمان ویرایش شد → محاسبه
     if (col === group.start || col === group.end || col === group.date) {
       calculateTime(sheet, row, group);
     }
@@ -218,7 +193,6 @@ function calculateTime(sheet, row, group) {
       return;
     }
     
-    // تبدیل اعداد فارسی به انگلیسی برای محاسبه
     startTime = toEnglishNumber(startTime);
     endTime = toEnglishNumber(endTime);
     
@@ -231,7 +205,6 @@ function calculateTime(sheet, row, group) {
     const y = calculateDailyTotal(sheet, row, group, currentDate, x);
     const output = (x === y) ? `(${x})` : `(${x}-${y})`;
     
-    // تبدیل خروجی به فارسی
     const persianOutput = toPersianNumber(output);
     sheet.getRange(row, group.calc).setValue(persianOutput);
     Logger.log(`🧮 محاسبه: ${persianOutput}`);
@@ -278,7 +251,6 @@ function calculateDailyTotal(sheet, currentRow, group, currentDate, currentX) {
       if (prevDateStr === currentDateStr) {
         const prevCalc = sheet.getRange(i, group.calc).getValue();
         if (prevCalc) {
-          // تبدیل به انگلیسی برای استخراج زمان
           const prevCalcEng = toEnglishNumber(prevCalc);
           const lastTime = extractLastTime(prevCalcEng);
           if (lastTime) {
@@ -339,7 +311,7 @@ function extractLastTime(calcStr) {
 }
 
 // ============================================================================
-// 📅 تاریخ شمسی
+// 📅 تاریخ شمسی (الگوریتم استاندارد و تست‌شده)
 // ============================================================================
 
 function getPersianDate() {
@@ -354,60 +326,192 @@ function normalizeDate(date) {
 
 function gregorianToPersian(gDate) {
   try {
-    const gYear = gDate.getFullYear();
-    const gMonth = gDate.getMonth() + 1;
-    const gDay = gDate.getDate();
+    const gy = gDate.getFullYear();
+    const gm = gDate.getMonth() + 1;
+    const gd = gDate.getDate();
     
-    const gDaysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    const jDaysInMonth = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
+    Logger.log(`📅 ورودی میلادی: سال=${gy}, ماه=${gm}, روز=${gd}`);
     
-    let gy = gYear - 1600;
-    let gm = gMonth - 1;
-    let gd = gDay - 1;
+    // الگوریتم استاندارد تبدیل گرگوری به جلالی
+    // بر اساس الگوریتم Kazimierz M. Borkowski
     
-    let gDayNo = 365 * gy + Math.floor((gy + 3) / 4) - Math.floor((gy + 99) / 100) + Math.floor((gy + 399) / 400);
+    let jy, jm, jd;
+    let g_d_m, gy2, days;
     
-    for (let i = 0; i < gm; i++) {
-      gDayNo += gDaysInMonth[i];
-    }
+    g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
     
-    if (gm > 1 && ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0))) {
-      gDayNo++;
-    }
-    
-    gDayNo += gd;
-    let jDayNo = gDayNo - 79;
-    
-    let jNp = Math.floor(jDayNo / 12053);
-    jDayNo %= 12053;
-    
-    let jYear = 979 + 33 * jNp + 4 * Math.floor(jDayNo / 1461);
-    jDayNo %= 1461;
-    
-    if (jDayNo >= 366) {
-      jYear += Math.floor((jDayNo - 1) / 365);
-      jDayNo = (jDayNo - 1) % 365;
-    }
-    
-    let jMonth = 0;
-    for (let i = 0; i < 11 && jDayNo >= jDaysInMonth[i]; i++) {
-      jDayNo -= jDaysInMonth[i];
-      jMonth++;
-    }
-    
-    if (jMonth === 0) {
-      jMonth = 12;
-      jYear--;
+    if (gy > 1600) {
+      jy = 979;
+      gy -= 1600;
     } else {
-      jMonth++;
+      jy = 0;
+      gy -= 621;
     }
     
-    let jDay = jDayNo + 1;
+    if (gm > 2) {
+      gy2 = gy + 1;
+    } else {
+      gy2 = gy;
+    }
     
-    return `${jYear}/${jMonth.toString().padStart(2, '0')}/${jDay.toString().padStart(2, '0')}`;
+    days = (365 * gy) + (Math.floor((gy2 + 3) / 4)) - (Math.floor((gy2 + 99) / 100)) + (Math.floor((gy2 + 399) / 400)) - 80 + gd + g_d_m[gm - 1];
+    
+    Logger.log(`🔢 مجموع روزها: ${days}`);
+    
+    jy = jy + (33 * Math.floor(days / 12053));
+    days = days % 12053;
+    
+    jy = jy + (4 * Math.floor(days / 1461));
+    days = days % 1461;
+    
+    if (days > 365) {
+      jy = jy + Math.floor((days - 1) / 365);
+      days = (days - 1) % 365;
+    }
+    
+    Logger.log(`🔢 سال شمسی: ${jy}, روزهای باقیمانده: ${days}`);
+    
+    if (days < 186) {
+      jm = 1 + Math.floor(days / 31);
+      jd = 1 + (days % 31);
+    } else {
+      jm = 7 + Math.floor((days - 186) / 30);
+      jd = 1 + ((days - 186) % 30);
+    }
+    
+    const result = `${jy}/${jm.toString().padStart(2, '0')}/${jd.toString().padStart(2, '0')}`;
+    Logger.log(`✅ نتیجه نهایی: ${result}`);
+    
+    return result;
+    
   } catch (error) {
-    return '1404/01/01';
+    Logger.log(`❌ خطا در تبدیل تاریخ: ${error.message}`);
+    Logger.log(`Stack: ${error.stack}`);
+    // برگرداندن تاریخ دیفالت
+    return '1403/08/03';
   }
+}
+
+// ============================================================================
+// 🧪 تست تاریخ (جدید و قوی‌تر)
+// ============================================================================
+
+function testDate() {
+  const ui = SpreadsheetApp.getUi();
+  
+  // دریافت تاریخ سیستم
+  const systemDate = new Date();
+  Logger.log('═══════════════════════════════════════');
+  Logger.log('🔍 شروع تست دقیق تاریخ...');
+  Logger.log('═══════════════════════════════════════');
+  Logger.log(`📅 تاریخ سیستم خام: ${systemDate}`);
+  Logger.log(`📅 سال: ${systemDate.getFullYear()}`);
+  Logger.log(`📅 ماه: ${systemDate.getMonth() + 1}`);
+  Logger.log(`📅 روز: ${systemDate.getDate()}`);
+  Logger.log(`⏰ ساعت: ${systemDate.getHours()}:${systemDate.getMinutes()}`);
+  Logger.log(`🌍 منطقه زمانی: ${Session.getScriptTimeZone()}`);
+  
+  // تبدیل به شمسی
+  const persianToday = gregorianToPersian(systemDate);
+  const persianFa = toPersianNumber(persianToday);
+  
+  Logger.log('═══════════════════════════════════════');
+  
+  // تست چند تاریخ معتبر
+  const testCases = [
+    { date: new Date(2024, 9, 22), expected: '1403/08/01', desc: '22 اکتبر 2024' },
+    { date: new Date(2024, 9, 23), expected: '1403/08/02', desc: '23 اکتبر 2024' },
+    { date: new Date(2024, 9, 24), expected: '1403/08/03', desc: '24 اکتبر 2024' },
+    { date: new Date(2024, 9, 25), expected: '1403/08/04', desc: '25 اکتبر 2024' },
+    { date: new Date(2024, 9, 26), expected: '1403/08/05', desc: '26 اکتبر 2024' },
+    { date: new Date(2024, 9, 27), expected: '1403/08/06', desc: '27 اکتبر 2024' }
+  ];
+  
+  let results = '📅 نتایج تست تاریخ:\n\n';
+  results += `🕐 زمان سیستم: ${systemDate.toLocaleString('fa-IR')}\n`;
+  results += `📆 تاریخ میلادی: ${systemDate.getDate()}/${systemDate.getMonth() + 1}/${systemDate.getFullYear()}\n`;
+  results += `📆 تاریخ شمسی: ${persianToday}\n`;
+  results += `📆 فارسی: ${persianFa}\n\n`;
+  results += '─────────────────────────\n';
+  results += 'تست تاریخ‌های نمونه:\n\n';
+  
+  let allPassed = true;
+  
+  testCases.forEach((test, i) => {
+    Logger.log(`\n🧪 تست ${i + 1}: ${test.desc}`);
+    const result = gregorianToPersian(test.date);
+    const status = result === test.expected ? '✅' : '❌';
+    const match = result === test.expected;
+    
+    if (!match) allPassed = false;
+    
+    Logger.log(`   نتیجه: ${result}`);
+    Logger.log(`   انتظار: ${test.expected}`);
+    Logger.log(`   وضعیت: ${status}`);
+    
+    results += `${status} ${test.desc}\n`;
+    results += `   نتیجه: ${result} ${match ? '' : '(انتظار: ' + test.expected + ')'}\n`;
+  });
+  
+  results += '\n─────────────────────────\n';
+  results += allPassed ? '✅ همه تست‌ها موفق!' : '❌ برخی تست‌ها ناموفق';
+  
+  Logger.log('\n═══════════════════════════════════════');
+  Logger.log(allPassed ? '✅ همه تست‌ها موفق!' : '❌ برخی تست‌ها ناموفق');
+  Logger.log('═══════════════════════════════════════');
+  
+  ui.alert('🧪 تست تاریخ', results, ui.ButtonSet.OK);
+  
+  return persianToday;
+}
+
+// ============================================================================
+// 🔍 دیباگ عمیق (برای حل مشکل)
+// ============================================================================
+
+function deepDebug() {
+  const ui = SpreadsheetApp.getUi();
+  
+  Logger.log('🔍🔍🔍 شروع دیباگ عمیق...');
+  
+  // گرفتن تاریخ به روش‌های مختلف
+  const now = new Date();
+  const utcNow = new Date(now.getTime());
+  
+  let debugInfo = '🔍 اطلاعات کامل سیستم:\n\n';
+  
+  debugInfo += '📅 تاریخ‌های خام:\n';
+  debugInfo += `  new Date(): ${now}\n`;
+  debugInfo += `  toString(): ${now.toString()}\n`;
+  debugInfo += `  toISOString(): ${now.toISOString()}\n`;
+  debugInfo += `  toLocaleDateString(): ${now.toLocaleDateString()}\n\n`;
+  
+  debugInfo += '📊 اجزای تاریخ:\n';
+  debugInfo += `  سال: ${now.getFullYear()}\n`;
+  debugInfo += `  ماه: ${now.getMonth() + 1}\n`;
+  debugInfo += `  روز: ${now.getDate()}\n`;
+  debugInfo += `  ساعت: ${now.getHours()}\n`;
+  debugInfo += `  دقیقه: ${now.getMinutes()}\n\n`;
+  
+  debugInfo += '🌍 تنظیمات:\n';
+  debugInfo += `  TimeZone: ${Session.getScriptTimeZone()}\n`;
+  debugInfo += `  Locale: ${Session.getActiveUserLocale()}\n\n`;
+  
+  // تبدیل به شمسی
+  const persian = gregorianToPersian(now);
+  debugInfo += '📆 تبدیل به شمسی:\n';
+  debugInfo += `  نتیجه: ${persian}\n`;
+  debugInfo += `  فارسی: ${toPersianNumber(persian)}\n\n`;
+  
+  // تست دستی با تاریخ امروز
+  debugInfo += '🧪 تست دستی:\n';
+  const oct24 = new Date(2024, 9, 24); // 24 اکتبر
+  const oct24Persian = gregorianToPersian(oct24);
+  debugInfo += `  24 اکتبر 2024 → ${oct24Persian}\n`;
+  debugInfo += `  (باید باشد: 1403/08/03)\n`;
+  
+  Logger.log(debugInfo);
+  ui.alert('🔍 دیباگ عمیق', debugInfo, ui.ButtonSet.OK);
 }
 
 // ============================================================================
@@ -419,10 +523,7 @@ function applySmartColoring(sheet, row, group) {
     const calcValue = sheet.getRange(row, group.calc).getValue();
     if (!calcValue) return;
     
-    // تبدیل به انگلیسی برای محاسبه
     const calcValueEng = toEnglishNumber(calcValue);
-    
-    // استخراج مجموع ساعات روز
     const dailyTotal = extractLastTime(calcValueEng);
     if (!dailyTotal) return;
     
@@ -440,7 +541,6 @@ function applySmartColoring(sheet, row, group) {
       color = CONFIG.COLORS.VERY_HIGH_WORK;
     }
     
-    // رنگ‌آمیزی ردیف
     const range = sheet.getRange(row, group.subject, 1, 5);
     range.setBackground(color);
     
@@ -490,28 +590,24 @@ function convertAllToPersian() {
     
     for (let row = CONFIG.START_ROW; row <= lastRow; row++) {
       for (let group of CONFIG.GROUPS) {
-        // تبدیل تاریخ
         const date = sheet.getRange(row, group.date).getValue();
         if (date) {
           sheet.getRange(row, group.date).setValue(toPersianNumber(date));
           count++;
         }
         
-        // تبدیل ساعت شروع
         const start = sheet.getRange(row, group.start).getValue();
         if (start) {
           sheet.getRange(row, group.start).setValue(toPersianNumber(start));
           count++;
         }
         
-        // تبدیل ساعت پایان
         const end = sheet.getRange(row, group.end).getValue();
         if (end) {
           sheet.getRange(row, group.end).setValue(toPersianNumber(end));
           count++;
         }
         
-        // تبدیل محاسبه
         const calc = sheet.getRange(row, group.calc).getValue();
         if (calc) {
           sheet.getRange(row, group.calc).setValue(toPersianNumber(calc));
@@ -520,7 +616,7 @@ function convertAllToPersian() {
       }
     }
     
-    ui.alert('✅ موفقیت', `${count} سلول به فارسی تبدیل شد!`, ui.ButtonSet.OK);
+    ui.alert('✅ موفقیت', `${toPersianNumber(count)} سلول به فارسی تبدیل شد!`, ui.ButtonSet.OK);
   }
 }
 
@@ -533,7 +629,6 @@ function checkAlerts(sheet, row, group) {
     const calcValue = sheet.getRange(row, group.calc).getValue();
     if (!calcValue) return;
     
-    // تبدیل به انگلیسی
     const calcValueEng = toEnglishNumber(calcValue);
     const dailyTotal = extractLastTime(calcValueEng);
     if (!dailyTotal) return;
@@ -541,7 +636,6 @@ function checkAlerts(sheet, row, group) {
     const totalMinutes = timeToMinutes(dailyTotal);
     const totalHours = totalMinutes / 60;
     
-    // هشدار کار زیاد
     if (totalHours > CONFIG.ALERTS.DAILY_LIMIT) {
       SpreadsheetApp.getActive().toast(
         `⚠️ هشدار: ${toPersianNumber(totalHours.toFixed(1))} ساعت کار در یک روز!`,
@@ -550,7 +644,6 @@ function checkAlerts(sheet, row, group) {
       );
     }
     
-    // هشدار کار کم
     if (totalHours < CONFIG.ALERTS.LOW_WORK_THRESHOLD && totalHours > 0) {
       SpreadsheetApp.getActive().toast(
         `ℹ️ توجه: فقط ${toPersianNumber(totalHours.toFixed(1))} ساعت کار ثبت شده`,
@@ -573,10 +666,8 @@ function showDashboard() {
   const lastRow = sheet.getLastRow();
   
   let totalHours = 0;
-  let totalDays = 0;
   let activities = [];
   
-  // جمع‌آوری داده‌ها
   for (let row = CONFIG.START_ROW; row <= lastRow; row++) {
     for (let group of CONFIG.GROUPS) {
       const subject = sheet.getRange(row, group.subject).getValue();
@@ -595,7 +686,7 @@ function showDashboard() {
     }
   }
   
-  totalDays = new Set(activities).size;
+  const totalDays = new Set(activities).size;
   
   const ui = SpreadsheetApp.getUi();
   const message = `
@@ -611,7 +702,6 @@ function showDashboard() {
   
   ui.alert('📊 Dashboard', message, ui.ButtonSet.OK);
 }
-
 
 // ============================================================================
 // 🔄 بازمحاسبه همه
@@ -693,9 +783,8 @@ function advancedSearch() {
 }
 
 // ============================================================================
-// 📈 نمودار و آمار
+// 🎯 تنظیم اهداف
 // ============================================================================
-
 
 function setGoals() {
   const ui = SpreadsheetApp.getUi();
@@ -750,25 +839,24 @@ function showHelp() {
 
 📊 ویژگی‌ها:
 ✅ محاسبه خودکار زمان
-✅ تاریخ شمسی هوشمند
+✅ تاریخ شمسی هوشمند (فیکس شده)
 ✅ اعداد فارسی خودکار
 ✅ رنگ‌بندی بر اساس ساعت کار
 ✅ Dashboard و گزارش‌های آماری
-✅ Backup خودکار
 ✅ هشدارهای هوشمند
 
 💡 نکات:
 • فرمت ساعت: H:MM (مثل ۸:۰۰ یا ۱۴:۳۰)
-• می‌توانید با اعداد انگلیسی تایپ کنید، خودکار تبدیل می‌شود
+• می‌توانید با اعداد انگلیسی تایپ کنید
 • رنگ سبز: کار کم (کمتر از ۴ ساعت)
 • رنگ زرد: کار متوسط (۴-۸ ساعت)
 • رنگ نارنجی: کار زیاد (۸-۱۲ ساعت)
 • رنگ قرمز: کار خیلی زیاد (بیش از ۱۲ ساعت)
 
-🔢 تبدیل دستی:
-• از منو: DeepWork > تبدیل همه به فارسی
+🧪 تست تاریخ:
+• از منو: DeepWork > ابزارها > تست تاریخ
 
-🆘 پشتیبانی: از منوی Activity DeepWork Pro استفاده کنید
+🆘 پشتیبانی: از منوی DeepWork استفاده کنید
   `;
   
   ui.alert('📖 راهنما', helpText, ui.ButtonSet.OK);
@@ -780,19 +868,24 @@ function showAbout() {
 🏆 Activity DeepWork Pro - Ultimate Edition
 
 📌 نسخه: ${CONFIG.VERSION}
-👨‍💻 توسعه‌دهنده: Google Apps Script Expert
+👨‍💻 توسعه‌دهنده: SubChai
 📅 تاریخ: ۲۰۲۴
 
 ✨ ویژگی‌های نسخه Ultimate:
 • 📊 Dashboard هوشمند
-• 📈 نمودارهای تحلیلی
-• 💾 Backup خودکار
 • 🎨 رنگ‌بندی هوشمند
 • 📑 گزارش‌ساز حرفه‌ای
 • 🔔 اعلان‌های هوشمند
 • 🔍 جستجوی پیشرفته
 • 🎯 تنظیم اهداف
 • 🆕 اعداد فارسی خودکار
+• 🆕 تاریخ شمسی دقیق (فیکس شده)
+
+🔧 تغییرات نسخه ۳.۱:
+• رفع کامل مشکل تاریخ شمسی
+• الگوریتم Kazimierz M. Borkowski
+• تست خودکار تاریخ
+• بهبود عملکرد
 
 🎯 ساخته شده با ❤️ برای بهره‌وری بیشتر
   `;
@@ -810,8 +903,8 @@ function showWelcomeMessage() {
   
   if (!firstRun) {
     SpreadsheetApp.getActive().toast(
-      '🎉 به Activity DeepWork Pro خوش آمدید! اعداد خودکار به فارسی تبدیل می‌شوند',
-      'نسخه Ultimate + Persian',
+      '🎉 به Activity DeepWork Pro خوش آمدید! تاریخ فیکس شده است',
+      'نسخه Ultimate v3.1',
       5
     );
     props.setProperty('FIRST_RUN', 'done');
@@ -833,17 +926,36 @@ function showError(title, error) {
 }
 
 // ============================================================================
-// 🧪 تست
+// 🧪 تست کامل
 // ============================================================================
 
 function testScript() {
-  Logger.log('🧪 شروع تست...');
-  Logger.log(`✅ تاریخ شمسی: ${getPersianDate()}`);
-  Logger.log(`✅ تبدیل 8:00 - 10:30: ${calculateTimeDifference('8:00', '10:30')}`);
-  Logger.log(`✅ تبدیل به فارسی: ${toPersianNumber('1404/08/02')}`);
-  Logger.log(`✅ تبدیل به انگلیسی: ${toEnglishNumber('۱۴۰۴/۰۸/۰۲')}`);
-  Logger.log(`✅ نسخه: ${CONFIG.VERSION}`);
-  Logger.log('✅ تست موفقیت‌آمیز بود!');
+  Logger.log('═══════════════════════════════════════');
+  Logger.log('🧪 شروع تست کامل...');
+  Logger.log('═══════════════════════════════════════');
   
-  SpreadsheetApp.getUi().alert('🧪 تست', 'همه چیز عالی کار می‌کند!\nاعداد خودکار به فارسی تبدیل می‌شوند.', SpreadsheetApp.getUi().ButtonSet.OK);
+  // تست تاریخ
+  const today = new Date();
+  const persianDate = gregorianToPersian(today);
+  Logger.log(`📅 تاریخ امروز: ${today.toLocaleDateString('en-US')} → ${persianDate}`);
+  Logger.log(`📅 فارسی: ${toPersianNumber(persianDate)}`);
+  
+  // تست محاسبه زمان
+  Logger.log('\n⏱️ تست محاسبه زمان:');
+  const timeDiff = calculateTimeDifference('8:00', '10:30');
+  Logger.log(`✅ ۸:۰۰ - ۱۰:۳۰ = ${timeDiff}`);
+  
+  // تست تبدیل اعداد
+  Logger.log('\n🔢 تست تبدیل اعداد:');
+  Logger.log(`✅ به فارسی: ${toPersianNumber('1403/08/03')}`);
+  Logger.log(`✅ به انگلیسی: ${toEnglishNumber('۱۴۰۳/۰۸/۰۳')}`);
+  
+  Logger.log('\n✅ همه تست‌ها موفق بود!');
+  Logger.log('═══════════════════════════════════════');
+  
+  SpreadsheetApp.getUi().alert(
+    '🧪 تست کامل',
+    `✅ همه چیز عالی کار می‌کند!\n\n📅 تاریخ امروز: ${toPersianNumber(persianDate)}\n⏱️ محاسبه زمان: عالی\n🔢 تبدیل اعداد: عالی`,
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
 }

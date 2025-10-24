@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * 🏆 ACTIVITY TRACKER PRO - ULTIMATE EDITION v3.0
+ * 🏆 ACTIVITY DeepWork PRO - ULTIMATE EDITION v3.0 SubChai
  * =============================================================================
  * 
  * 🎯 نسخه حرفه‌ای با قابلیت‌های پیشرفته
@@ -13,11 +13,9 @@
  * ✅ رنگ‌بندی هوشمند
  * ✅ گزارش‌ساز حرفه‌ای
  * ✅ اعلان‌های هوشمند
- * ✅ Export به PDF/Excel
  * ✅ جستجوی پیشرفته
  * 
- * نویسنده: Google Apps Script Expert
- * تاریخ: 2024
+ * نویسنده: SubChai
  * نسخه: 3.0 Ultimate
  * =============================================================================
  */
@@ -119,8 +117,8 @@ function onOpen() {
   try {
     const ui = SpreadsheetApp.getUi();
     
-    ui.createMenu('🎯 Activity Tracker Pro')
-      .addItem('📊 Dashboard', 'showDashboard')
+    ui.createMenu('🎯 DeepWork')
+      .addItem('📊 داشبورد', 'showDashboard')
       .addSeparator()
       .addItem('🔄 بازمحاسبه همه', 'recalculateAll')
       .addItem('🎨 رنگ‌بندی خودکار', 'applyColoringToAll')
@@ -511,14 +509,14 @@ function showDashboard() {
   
   const ui = SpreadsheetApp.getUi();
   const message = `
-📊 آمار کلی Activity Tracker
+📊 آمار کلی Activity DeepWork
 
 ⏰ مجموع ساعات کاری: ${totalHours.toFixed(1)} ساعت
 📅 تعداد روزهای کاری: ${totalDays} روز
 📝 تعداد فعالیت‌ها: ${activities.length}
 📈 میانگین ساعت در روز: ${(totalHours / (totalDays || 1)).toFixed(1)} ساعت
 
-🎯 Activity Tracker Pro v${CONFIG.VERSION}
+🎯 Activity DeepWork Pro v${CONFIG.VERSION}
   `;
   
   ui.alert('📊 Dashboard', message, ui.ButtonSet.OK);
@@ -651,7 +649,7 @@ function showSettings() {
 function showHelp() {
   const ui = SpreadsheetApp.getUi();
   const helpText = `
-📖 راهنمای Activity Tracker Pro
+📖 راهنمای SubChai DeepWork Pro
 
 🎯 نحوه استفاده:
 ۱. در ستون موضوع فعالیت را بنویسید
@@ -674,7 +672,7 @@ function showHelp() {
 • رنگ نارنجی: کار زیاد (8-12 ساعت)
 • رنگ قرمز: کار خیلی زیاد (بیش از 12 ساعت)
 
-🆘 پشتیبانی: از منوی Activity Tracker Pro استفاده کنید
+🆘 پشتیبانی: از منوی Activity DeepWork Pro استفاده کنید
   `;
   
   ui.alert('📖 راهنما', helpText, ui.ButtonSet.OK);
@@ -683,7 +681,7 @@ function showHelp() {
 function showAbout() {
   const ui = SpreadsheetApp.getUi();
   const aboutText = `
-🏆 Activity Tracker Pro - Ultimate Edition
+🏆 Activity DeepWork Pro - Ultimate Edition
 
 📌 نسخه: ${CONFIG.VERSION}
 👨‍💻 توسعه‌دهنده: Google Apps Script Expert
@@ -715,7 +713,7 @@ function showWelcomeMessage() {
   
   if (!firstRun) {
     SpreadsheetApp.getActive().toast(
-      '🎉 به Activity Tracker Pro خوش آمدید!',
+      '🎉 به Activity DeepWork Pro خوش آمدید!',
       'نسخه Ultimate',
       5
     );

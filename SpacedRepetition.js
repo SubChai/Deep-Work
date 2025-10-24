@@ -1,4 +1,4 @@
-//Obsolete.... .
+//⚠️ Deprecated Functions
 
 function TOSHAMSI_TODAY() {
   var today = new Date();

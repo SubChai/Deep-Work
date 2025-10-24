@@ -1,3 +1,5 @@
+//Obsolete.... .
+
 function TOSHAMSI_TODAY() {
   var today = new Date();
   var gy = today.getFullYear();
@@ -51,18 +53,17 @@ function onEdit(e) {
   var col = range.getColumn();
   var row = range.getRow();
   
-  // اگر ردیف 1 یا 2 باشه، کاری نکن
+
   if (row <= 2) {
     return;
   }
   
-  // اگر ستون فرد باشه (1=A, 3=C, 5=E, ...)
+
   if (col % 2 == 1 && range.getValue() != "") {
-    var targetCell = sheet.getRange(row, col + 1); // ستون بعدی (زوج)
+    var targetCell = sheet.getRange(row, col + 1); 
     targetCell.setValue(TOSHAMSI_TODAY());
   }
   
-  // محاسبه جمع ستون‌های فرد
   updateSumInG2(sheet);
 }
 
@@ -70,13 +71,9 @@ function updateSumInG2(sheet) {
   var lastCol = sheet.getLastColumn();
   var lastRow = sheet.getLastRow();
   var sum = 0;
-  
-  // از ستون 1 (A) شروع می‌کنیم و فقط ستون‌های فرد رو می‌خونیم
-  for (var col = 1; col <= lastCol; col += 2) {
+    for (var col = 1; col <= lastCol; col += 2) {
     for (var row = 3; row <= lastRow; row++) {
       var value = sheet.getRange(row, col).getValue();
-      
-      // تبدیل به عدد اگر متن باشه
       if (value !== "" && value !== null) {
         var numValue = Number(value);
         if (!isNaN(numValue)) {
@@ -87,6 +84,6 @@ function updateSumInG2(sheet) {
   }
   
   
-  // جمع رو در G2 می‌ذاریم
+
   sheet.getRange("G2").setValue(sum);
 }

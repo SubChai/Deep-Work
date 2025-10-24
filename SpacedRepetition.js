@@ -86,6 +86,7 @@ function updateSumInG2(sheet) {
     }
   }
   
+  
   // جمع رو در G2 می‌ذاریم
   sheet.getRange("G2").setValue(sum);
 }

@@ -125,23 +125,9 @@ function onOpen() {
       .addItem('🔄 بازمحاسبه همه', 'recalculateAll')
       .addItem('🎨 رنگ‌بندی خودکار', 'applyColoringToAll')
       .addSeparator()
-      .addSubMenu(ui.createMenu('📈 گزارش‌ها')
-        .addItem('📅 گزارش روزانه', 'generateDailyReport')
-        .addItem('📆 گزارش هفتگی', 'generateWeeklyReport')
-        .addItem('📊 گزارش ماهانه', 'generateMonthlyReport')
-        .addItem('📑 Export به PDF', 'exportToPDF')
-        .addItem('📤 Export به Excel', 'exportToExcel'))
-      .addSeparator()
-      .addSubMenu(ui.createMenu('💾 پشتیبان‌گیری')
-        .addItem('💾 Backup الان', 'createBackup')
-        .addItem('📥 بازیابی Backup', 'restoreBackup')
-        .addItem('🗑️ حذف Backup‌های قدیمی', 'cleanOldBackups'))
-      .addSeparator()
       .addSubMenu(ui.createMenu('🔍 ابزارها')
         .addItem('🔎 جستجوی پیشرفته', 'advancedSearch')
-        .addItem('📈 نمودار پیشرفت', 'showProgressChart')
-        .addItem('🎯 تنظیم اهداف', 'setGoals')
-        .addItem('📊 آمار کلی', 'showStatistics'))
+        .addItem('🎯 تنظیم اهداف', 'setGoals'))
       .addSeparator()
       .addItem('⚙️ تنظیمات', 'showSettings')
       .addItem('📖 راهنما', 'showHelp')
@@ -538,138 +524,6 @@ function showDashboard() {
   ui.alert('📊 Dashboard', message, ui.ButtonSet.OK);
 }
 
-// ============================================================================
-// 📈 گزارش‌ها
-// ============================================================================
-
-function generateDailyReport() {
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.prompt(
-    '📅 گزارش روزانه',
-    'تاریخ شمسی را وارد کنید (مثال: 1404/08/02):',
-    ui.ButtonSet.OK_CANCEL
-  );
-  
-  if (response.getSelectedButton() === ui.Button.OK) {
-    const targetDate = response.getResponseText().trim();
-    const sheet = SpreadsheetApp.getActiveSheet();
-    const lastRow = sheet.getLastRow();
-    
-    let report = `📅 گزارش روز ${targetDate}\n\n`;
-    let totalMinutes = 0;
-    let count = 0;
-    
-    for (let row = CONFIG.START_ROW; row <= lastRow; row++) {
-      for (let group of CONFIG.GROUPS) {
-        const date = sheet.getRange(row, group.date).getValue();
-        if (normalizeDate(date) === targetDate) {
-          const subject = sheet.getRange(row, group.subject).getValue();
-          const start = sheet.getRange(row, group.start).getValue();
-          const end = sheet.getRange(row, group.end).getValue();
-          const calc = sheet.getRange(row, group.calc).getValue();
-          
-          report += `${count + 1}. ${subject}\n`;
-          report += `   ⏰ ${start} - ${end}\n`;
-          report += `   ⏱️ ${calc}\n\n`;
-          
-          const time = extractLastTime(calc);
-          if (time) {
-            totalMinutes += timeToMinutes(time);
-          }
-          count++;
-        }
-      }
-    }
-    
-    report += `═══════════════════════════\n`;
-    report += `📊 مجموع: ${minutesToTime(totalMinutes)}\n`;
-    report += `📝 تعداد فعالیت‌ها: ${count}\n`;
-    
-    ui.alert('📅 گزارش روزانه', report, ui.ButtonSet.OK);
-  }
-}
-
-function generateWeeklyReport() {
-  SpreadsheetApp.getUi().alert(
-    '📆 گزارش هفتگی',
-    'این قابلیت به زودی اضافه می‌شود!',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-function generateMonthlyReport() {
-  SpreadsheetApp.getUi().alert(
-    '📊 گزارش ماهانه',
-    'این قابلیت به زودی اضافه می‌شود!',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-// ============================================================================
-// 💾 Backup
-// ============================================================================
-
-function createBackup() {
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getActiveSheet();
-    
-    // ایجاد شیت backup
-    const backupName = `Backup_${getPersianDate()}_${new Date().getTime()}`;
-    const backup = sheet.copyTo(ss);
-    backup.setName(backupName);
-    
-    SpreadsheetApp.getUi().alert(
-      '💾 Backup',
-      `✅ پشتیبان با نام "${backupName}" ایجاد شد!`,
-      SpreadsheetApp.getUi().ButtonSet.OK
-    );
-    
-  } catch (error) {
-    showError('خطا در ایجاد Backup', error);
-  }
-}
-
-function restoreBackup() {
-  SpreadsheetApp.getUi().alert(
-    '📥 بازیابی',
-    'برای بازیابی، شیت Backup مورد نظر را کپی کنید.',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-function cleanOldBackups() {
-  const ui = SpreadsheetApp.getUi();
-  const result = ui.alert(
-    '🗑️ حذف Backup‌های قدیمی',
-    'آیا می‌خواهید Backup‌های قدیمی‌تر از 30 روز حذف شوند؟',
-    ui.ButtonSet.YES_NO
-  );
-  
-  if (result === ui.Button.YES) {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheets = ss.getSheets();
-    const now = new Date().getTime();
-    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-    let deletedCount = 0;
-    
-    sheets.forEach(sheet => {
-      const name = sheet.getName();
-      if (name.startsWith('Backup_')) {
-        const match = name.match(/_(\d+)$/);
-        if (match) {
-          const timestamp = parseInt(match[1]);
-          if (now - timestamp > thirtyDays) {
-            ss.deleteSheet(sheet);
-            deletedCount++;
-          }
-        }
-      }
-    });
-    
-    ui.alert('✅ موفقیت', `${deletedCount} Backup قدیمی حذف شد!`, ui.ButtonSet.OK);
-  }
-}
 
 // ============================================================================
 // 🔄 بازمحاسبه همه
@@ -754,17 +608,6 @@ function advancedSearch() {
 // 📈 نمودار و آمار
 // ============================================================================
 
-function showProgressChart() {
-  SpreadsheetApp.getUi().alert(
-    '📈 نمودار',
-    'برای مشاهده نمودارها، از منوی Insert > Chart استفاده کنید.',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-function showStatistics() {
-  showDashboard(); // استفاده از Dashboard به عنوان آمار
-}
 
 function setGoals() {
   const ui = SpreadsheetApp.getUi();
@@ -781,26 +624,6 @@ function setGoals() {
       ui.alert('✅ موفقیت', `هدف روزانه به ${goal} ساعت تنظیم شد!`, ui.ButtonSet.OK);
     }
   }
-}
-
-// ============================================================================
-// 📤 Export
-// ============================================================================
-
-function exportToPDF() {
-  SpreadsheetApp.getUi().alert(
-    '📑 Export به PDF',
-    'از منوی File > Download > PDF استفاده کنید.',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-function exportToExcel() {
-  SpreadsheetApp.getUi().alert(
-    '📤 Export به Excel',
-    'از منوی File > Download > Microsoft Excel استفاده کنید.',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
 }
 
 // ============================================================================

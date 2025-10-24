@@ -3,10 +3,11 @@
  * 🏆 ACTIVITY DeepWork PRO - ULTIMATE EDITION v3.0 SubChai
  * =============================================================================
  * 
- * 🎯 نسخه حرفه‌ای با قابلیت‌های پیشرفته
+ * 🎯 نسخه حرفه‌ای با قابلیت‌های پیشرفته + اعداد فارسی
  * ویژگی‌ها:
- * ✅ محاسبه خودکار زمان کاری
+ * ✅ محاسبه خودکار زمان
  * ✅ تاریخ شمسی هوشمند
+ * ✅ 🆕 تبدیل خودکار به اعداد فارسی
  * ✅ Dashboard آماری
  * ✅ نمودارهای تحلیلی
  * ✅ Backup خودکار
@@ -16,7 +17,7 @@
  * ✅ جستجوی پیشرفته
  * 
  * نویسنده: SubChai
- * نسخه: 3.0 Ultimate
+ * نسخه: 3.0 Ultimate + Persian Numbers
  * =============================================================================
  */
 
@@ -27,7 +28,7 @@
 const CONFIG = {
   HEADER_ROWS: 2,
   START_ROW: 3,
-  VERSION: '3.0 Ultimate',
+  VERSION: '3.0 Ultimate + Persian',
   
   GROUPS: [
     { name: 'گروه ۱', subject: 1,  start: 2,  end: 3,  calc: 4,  date: 5  },
@@ -63,6 +64,27 @@ const CONFIG = {
     SETTINGS: 'Settings'
   }
 };
+
+// ============================================================================
+// 🔢 تبدیل اعداد به فارسی و برعکس
+// ============================================================================
+
+function toPersianNumber(input) {
+  if (!input) return "";
+  const persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+  return input.toString().replace(/\d/g, digit => persianDigits[digit]);
+}
+
+function toEnglishNumber(input) {
+  if (!input) return "";
+  const englishDigits = ['0','1','2','3','4','5','6','7','8','9'];
+  const persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+  let result = input.toString();
+  for (let i = 0; i < 10; i++) {
+    result = result.replace(new RegExp(persianDigits[i], 'g'), englishDigits[i]);
+  }
+  return result;
+}
 
 // ============================================================================
 // 🎬 تریگر اصلی - onEdit
@@ -122,6 +144,7 @@ function onOpen() {
       .addSeparator()
       .addItem('🔄 بازمحاسبه همه', 'recalculateAll')
       .addItem('🎨 رنگ‌بندی خودکار', 'applyColoringToAll')
+      .addItem('🔢 تبدیل همه به فارسی', 'convertAllToPersian')
       .addSeparator()
       .addSubMenu(ui.createMenu('🔍 ابزارها')
         .addItem('🔎 جستجوی پیشرفته', 'advancedSearch')
@@ -186,14 +209,18 @@ function processEdit(sheet, row, col, group) {
 
 function calculateTime(sheet, row, group) {
   try {
-    const startTime = sheet.getRange(row, group.start).getValue();
-    const endTime = sheet.getRange(row, group.end).getValue();
+    let startTime = sheet.getRange(row, group.start).getValue();
+    let endTime = sheet.getRange(row, group.end).getValue();
     const currentDate = sheet.getRange(row, group.date).getValue();
     
     if (!startTime || !endTime || !currentDate) {
       sheet.getRange(row, group.calc).setValue('');
       return;
     }
+    
+    // تبدیل اعداد فارسی به انگلیسی برای محاسبه
+    startTime = toEnglishNumber(startTime);
+    endTime = toEnglishNumber(endTime);
     
     const x = calculateTimeDifference(startTime, endTime);
     if (!x) {
@@ -204,8 +231,10 @@ function calculateTime(sheet, row, group) {
     const y = calculateDailyTotal(sheet, row, group, currentDate, x);
     const output = (x === y) ? `(${x})` : `(${x}-${y})`;
     
-    sheet.getRange(row, group.calc).setValue(output);
-    Logger.log(`🧮 محاسبه: ${output}`);
+    // تبدیل خروجی به فارسی
+    const persianOutput = toPersianNumber(output);
+    sheet.getRange(row, group.calc).setValue(persianOutput);
+    Logger.log(`🧮 محاسبه: ${persianOutput}`);
     
   } catch (error) {
     showError('خطا در محاسبه', error);
@@ -249,7 +278,9 @@ function calculateDailyTotal(sheet, currentRow, group, currentDate, currentX) {
       if (prevDateStr === currentDateStr) {
         const prevCalc = sheet.getRange(i, group.calc).getValue();
         if (prevCalc) {
-          const lastTime = extractLastTime(prevCalc);
+          // تبدیل به انگلیسی برای استخراج زمان
+          const prevCalcEng = toEnglishNumber(prevCalc);
+          const lastTime = extractLastTime(prevCalcEng);
           if (lastTime) {
             const lastMinutes = timeToMinutes(lastTime);
             if (lastMinutes !== null) {
@@ -312,13 +343,13 @@ function extractLastTime(calcStr) {
 // ============================================================================
 
 function getPersianDate() {
-  return gregorianToPersian(new Date());
+  return toPersianNumber(gregorianToPersian(new Date()));
 }
 
 function normalizeDate(date) {
   if (!date) return '';
   if (date instanceof Date) return gregorianToPersian(date);
-  return date.toString().trim();
+  return toEnglishNumber(date.toString().trim());
 }
 
 function gregorianToPersian(gDate) {
@@ -388,8 +419,11 @@ function applySmartColoring(sheet, row, group) {
     const calcValue = sheet.getRange(row, group.calc).getValue();
     if (!calcValue) return;
     
+    // تبدیل به انگلیسی برای محاسبه
+    const calcValueEng = toEnglishNumber(calcValue);
+    
     // استخراج مجموع ساعات روز
-    const dailyTotal = extractLastTime(calcValue);
+    const dailyTotal = extractLastTime(calcValueEng);
     if (!dailyTotal) return;
     
     const totalMinutes = timeToMinutes(dailyTotal);
@@ -438,6 +472,59 @@ function applyColoringToAll() {
 }
 
 // ============================================================================
+// 🔢 تبدیل همه داده‌ها به فارسی
+// ============================================================================
+
+function convertAllToPersian() {
+  const ui = SpreadsheetApp.getUi();
+  const result = ui.alert(
+    '🔢 تبدیل به فارسی',
+    'آیا می‌خواهید همه اعداد به فارسی تبدیل شوند؟',
+    ui.ButtonSet.YES_NO
+  );
+  
+  if (result === ui.Button.YES) {
+    const sheet = SpreadsheetApp.getActiveSheet();
+    const lastRow = sheet.getLastRow();
+    let count = 0;
+    
+    for (let row = CONFIG.START_ROW; row <= lastRow; row++) {
+      for (let group of CONFIG.GROUPS) {
+        // تبدیل تاریخ
+        const date = sheet.getRange(row, group.date).getValue();
+        if (date) {
+          sheet.getRange(row, group.date).setValue(toPersianNumber(date));
+          count++;
+        }
+        
+        // تبدیل ساعت شروع
+        const start = sheet.getRange(row, group.start).getValue();
+        if (start) {
+          sheet.getRange(row, group.start).setValue(toPersianNumber(start));
+          count++;
+        }
+        
+        // تبدیل ساعت پایان
+        const end = sheet.getRange(row, group.end).getValue();
+        if (end) {
+          sheet.getRange(row, group.end).setValue(toPersianNumber(end));
+          count++;
+        }
+        
+        // تبدیل محاسبه
+        const calc = sheet.getRange(row, group.calc).getValue();
+        if (calc) {
+          sheet.getRange(row, group.calc).setValue(toPersianNumber(calc));
+          count++;
+        }
+      }
+    }
+    
+    ui.alert('✅ موفقیت', `${count} سلول به فارسی تبدیل شد!`, ui.ButtonSet.OK);
+  }
+}
+
+// ============================================================================
 // 🔔 بررسی هشدارها
 // ============================================================================
 
@@ -446,7 +533,9 @@ function checkAlerts(sheet, row, group) {
     const calcValue = sheet.getRange(row, group.calc).getValue();
     if (!calcValue) return;
     
-    const dailyTotal = extractLastTime(calcValue);
+    // تبدیل به انگلیسی
+    const calcValueEng = toEnglishNumber(calcValue);
+    const dailyTotal = extractLastTime(calcValueEng);
     if (!dailyTotal) return;
     
     const totalMinutes = timeToMinutes(dailyTotal);
@@ -455,7 +544,7 @@ function checkAlerts(sheet, row, group) {
     // هشدار کار زیاد
     if (totalHours > CONFIG.ALERTS.DAILY_LIMIT) {
       SpreadsheetApp.getActive().toast(
-        `⚠️ هشدار: ${totalHours.toFixed(1)} ساعت کار در یک روز!`,
+        `⚠️ هشدار: ${toPersianNumber(totalHours.toFixed(1))} ساعت کار در یک روز!`,
         'کار زیاد',
         5
       );
@@ -464,7 +553,7 @@ function checkAlerts(sheet, row, group) {
     // هشدار کار کم
     if (totalHours < CONFIG.ALERTS.LOW_WORK_THRESHOLD && totalHours > 0) {
       SpreadsheetApp.getActive().toast(
-        `ℹ️ توجه: فقط ${totalHours.toFixed(1)} ساعت کار ثبت شده`,
+        `ℹ️ توجه: فقط ${toPersianNumber(totalHours.toFixed(1))} ساعت کار ثبت شده`,
         'کار کم',
         3
       );
@@ -494,7 +583,8 @@ function showDashboard() {
       if (subject) {
         const calcValue = sheet.getRange(row, group.calc).getValue();
         if (calcValue) {
-          const time = extractLastTime(calcValue);
+          const calcValueEng = toEnglishNumber(calcValue);
+          const time = extractLastTime(calcValueEng);
           if (time) {
             const minutes = timeToMinutes(time);
             totalHours += minutes / 60;
@@ -511,10 +601,10 @@ function showDashboard() {
   const message = `
 📊 آمار کلی Activity DeepWork
 
-⏰ مجموع ساعات کاری: ${totalHours.toFixed(1)} ساعت
-📅 تعداد روزهای کاری: ${totalDays} روز
-📝 تعداد فعالیت‌ها: ${activities.length}
-📈 میانگین ساعت در روز: ${(totalHours / (totalDays || 1)).toFixed(1)} ساعت
+⏰ مجموع ساعات کاری: ${toPersianNumber(totalHours.toFixed(1))} ساعت
+📅 تعداد روزهای کاری: ${toPersianNumber(totalDays)} روز
+📝 تعداد فعالیت‌ها: ${toPersianNumber(activities.length)}
+📈 میانگین ساعت در روز: ${toPersianNumber((totalHours / (totalDays || 1)).toFixed(1))} ساعت
 
 🎯 Activity DeepWork Pro v${CONFIG.VERSION}
   `;
@@ -552,7 +642,7 @@ function recalculateAll() {
         }
       }
       
-      ui.alert('✅ موفقیت', `${count} ردیف بروز شد!`, ui.ButtonSet.OK);
+      ui.alert('✅ موفقیت', `${toPersianNumber(count)} ردیف بروز شد!`, ui.ButtonSet.OK);
       
     } catch (error) {
       showError('خطا در بازمحاسبه', error);
@@ -588,14 +678,14 @@ function advancedSearch() {
         if (subject && (subject.toString().toLowerCase().includes(searchTerm) ||
             normalizeDate(date).includes(searchTerm))) {
           const calc = sheet.getRange(row, group.calc).getValue();
-          results += `${count + 1}. ${subject} - ${normalizeDate(date)} - ${calc}\n`;
+          results += `${toPersianNumber(count + 1)}. ${subject} - ${date} - ${calc}\n`;
           count++;
         }
       }
     }
     
     if (count > 0) {
-      ui.alert('🔍 نتایج جستجو', `${count} نتیجه یافت شد:\n\n${results}`, ui.ButtonSet.OK);
+      ui.alert('🔍 نتایج جستجو', `${toPersianNumber(count)} نتیجه یافت شد:\n\n${results}`, ui.ButtonSet.OK);
     } else {
       ui.alert('🔍 جستجو', 'نتیجه‌ای یافت نشد!', ui.ButtonSet.OK);
     }
@@ -619,7 +709,7 @@ function setGoals() {
     const goal = parseFloat(response.getResponseText());
     if (goal > 0) {
       PropertiesService.getUserProperties().setProperty('DAILY_GOAL', goal);
-      ui.alert('✅ موفقیت', `هدف روزانه به ${goal} ساعت تنظیم شد!`, ui.ButtonSet.OK);
+      ui.alert('✅ موفقیت', `هدف روزانه به ${toPersianNumber(goal)} ساعت تنظیم شد!`, ui.ButtonSet.OK);
     }
   }
 }
@@ -636,8 +726,8 @@ function showSettings() {
   const message = `
 ⚙️ تنظیمات فعلی
 
-🎯 هدف روزانه: ${dailyGoal} ساعت
-⚠️ حد هشدار: ${CONFIG.ALERTS.DAILY_LIMIT} ساعت
+🎯 هدف روزانه: ${toPersianNumber(dailyGoal)} ساعت
+⚠️ حد هشدار: ${toPersianNumber(CONFIG.ALERTS.DAILY_LIMIT)} ساعت
 📊 نسخه: ${CONFIG.VERSION}
 
 برای تغییر تنظیمات از منوی ابزارها استفاده کنید.
@@ -656,21 +746,27 @@ function showHelp() {
 ۲. تاریخ شمسی خودکار ثبت می‌شود
 ۳. ساعت شروع و پایان را وارد کنید
 ۴. محاسبه خودکار انجام می‌شود
+۵. 🆕 اعداد خودکار به فارسی تبدیل می‌شوند
 
 📊 ویژگی‌ها:
 ✅ محاسبه خودکار زمان
 ✅ تاریخ شمسی هوشمند
+✅ اعداد فارسی خودکار
 ✅ رنگ‌بندی بر اساس ساعت کار
 ✅ Dashboard و گزارش‌های آماری
 ✅ Backup خودکار
 ✅ هشدارهای هوشمند
 
 💡 نکات:
-• فرمت ساعت: H:MM (مثل 8:00 یا 14:30)
-• رنگ سبز: کار کم (کمتر از 4 ساعت)
-• رنگ زرد: کار متوسط (4-8 ساعت)
-• رنگ نارنجی: کار زیاد (8-12 ساعت)
-• رنگ قرمز: کار خیلی زیاد (بیش از 12 ساعت)
+• فرمت ساعت: H:MM (مثل ۸:۰۰ یا ۱۴:۳۰)
+• می‌توانید با اعداد انگلیسی تایپ کنید، خودکار تبدیل می‌شود
+• رنگ سبز: کار کم (کمتر از ۴ ساعت)
+• رنگ زرد: کار متوسط (۴-۸ ساعت)
+• رنگ نارنجی: کار زیاد (۸-۱۲ ساعت)
+• رنگ قرمز: کار خیلی زیاد (بیش از ۱۲ ساعت)
+
+🔢 تبدیل دستی:
+• از منو: DeepWork > تبدیل همه به فارسی
 
 🆘 پشتیبانی: از منوی Activity DeepWork Pro استفاده کنید
   `;
@@ -685,7 +781,7 @@ function showAbout() {
 
 📌 نسخه: ${CONFIG.VERSION}
 👨‍💻 توسعه‌دهنده: Google Apps Script Expert
-📅 تاریخ: 2024
+📅 تاریخ: ۲۰۲۴
 
 ✨ ویژگی‌های نسخه Ultimate:
 • 📊 Dashboard هوشمند
@@ -696,6 +792,7 @@ function showAbout() {
 • 🔔 اعلان‌های هوشمند
 • 🔍 جستجوی پیشرفته
 • 🎯 تنظیم اهداف
+• 🆕 اعداد فارسی خودکار
 
 🎯 ساخته شده با ❤️ برای بهره‌وری بیشتر
   `;
@@ -713,8 +810,8 @@ function showWelcomeMessage() {
   
   if (!firstRun) {
     SpreadsheetApp.getActive().toast(
-      '🎉 به Activity DeepWork Pro خوش آمدید!',
-      'نسخه Ultimate',
+      '🎉 به Activity DeepWork Pro خوش آمدید! اعداد خودکار به فارسی تبدیل می‌شوند',
+      'نسخه Ultimate + Persian',
       5
     );
     props.setProperty('FIRST_RUN', 'done');
@@ -743,8 +840,10 @@ function testScript() {
   Logger.log('🧪 شروع تست...');
   Logger.log(`✅ تاریخ شمسی: ${getPersianDate()}`);
   Logger.log(`✅ تبدیل 8:00 - 10:30: ${calculateTimeDifference('8:00', '10:30')}`);
+  Logger.log(`✅ تبدیل به فارسی: ${toPersianNumber('1404/08/02')}`);
+  Logger.log(`✅ تبدیل به انگلیسی: ${toEnglishNumber('۱۴۰۴/۰۸/۰۲')}`);
   Logger.log(`✅ نسخه: ${CONFIG.VERSION}`);
   Logger.log('✅ تست موفقیت‌آمیز بود!');
   
-  SpreadsheetApp.getUi().alert('🧪 تست', 'همه چیز عالی کار می‌کند!', SpreadsheetApp.getUi().ButtonSet.OK);
+  SpreadsheetApp.getUi().alert('🧪 تست', 'همه چیز عالی کار می‌کند!\nاعداد خودکار به فارسی تبدیل می‌شوند.', SpreadsheetApp.getUi().ButtonSet.OK);
 }

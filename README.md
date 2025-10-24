@@ -1,3 +1,12 @@
+**Spaced Repetition** :
+
+<img width="1956" height="1218" alt="image" src="https://github.com/user-attachments/assets/47b000d1-360c-4530-ae50-a0c8a7369d70" />
+
+
+
+
+
+
 <img width="312" height="74" alt="image" src="https://github.com/user-attachments/assets/0cf7baa3-81b8-4a3a-b298-5c0ffd244df5" />
 
 
@@ -13,9 +22,8 @@ IFS(
 )
 
 
+** Deep Work **
 
-
-# 🏆 **ULTIMATE EDITION - Activity Tracker Pro**
 
 ## 🎯 **ویژگی‌های نسخه حرفه‌ای:**
 

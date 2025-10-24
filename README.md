@@ -1,25 +1,6 @@
 **Spaced Repetition** :
 
-<img width="1956" height="1218" alt="image" src="https://github.com/user-attachments/assets/47b000d1-360c-4530-ae50-a0c8a7369d70" />
-
-
-
-
-
-
-<img width="312" height="74" alt="image" src="https://github.com/user-attachments/assets/0cf7baa3-81b8-4a3a-b298-5c0ffd244df5" />
-
-
-
-=REPT("█", INT(MIN(G2,5000)/5000*12)) &
-REPT("░", 12-INT(MIN(G2,5000)/5000*12)) &
-" " & TEXT(MIN(G2,5000)/5000, "0%") & " " &
-IFS(
-  G2<500, "🌱 مبتدی",
-  G2<2000, "🌿 رو به رشد",
-  G2<5000, "🌳 ماهر",
-  G2>=5000, "🏆 استاد"
-)
+https://docs.google.com/spreadsheets/d/1GB3jVM6CfXrSfLkw4OimqYb0ai8_HzUHsiBrqhDyGKk/edit?usp=sharing
 
 
 ** Deep Work **

@@ -1,3 +1,7 @@
+<img width="312" height="74" alt="image" src="https://github.com/user-attachments/assets/0cf7baa3-81b8-4a3a-b298-5c0ffd244df5" />
+
+
+
 =REPT("█", INT(MIN(G2,5000)/5000*12)) &
 REPT("░", 12-INT(MIN(G2,5000)/5000*12)) &
 " " & TEXT(MIN(G2,5000)/5000, "0%") & " " &
@@ -7,7 +11,6 @@ IFS(
   G2<5000, "🌳 ماهر",
   G2>=5000, "🏆 استاد"
 )
-<img width="312" height="74" alt="image" src="https://github.com/user-attachments/assets/0cf7baa3-81b8-4a3a-b298-5c0ffd244df5" />
 
 
 
